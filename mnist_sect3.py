@@ -15,11 +15,6 @@ os.makedirs(save_dir, exist_ok=True)
 # ==== 1. データセットの準備 ====
 transform = transforms.ToTensor()
 
-# ==== 2. MNISTデータセットをダウンロード・ロード(初回) ====
-#trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-#testset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
-
-
 trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
 testset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
 
@@ -76,14 +71,19 @@ print(f'Test Accuracy: {100 * correct / total:.2f}%')
 
 # ==== 6. テスト画像から8枚を推論・保存 ====
 
+import random
+
 # テストデータから1バッチ取得
 testiter = iter(testloader)
 images, labels = next(testiter)
 
-# 最初の8枚を取り出して推論＆保存
-for idx in range(8):
-    image = images[idx].unsqueeze(0)  # (1,1,28,28)
-    label = labels[idx]
+# 0〜63の中からランダムに8個インデックスを選ぶ
+indices = random.sample(range(len(images)), 8)
+
+# 選んだランダムなインデックスで推論・保存
+for idx, random_idx in enumerate(indices):
+    image = images[random_idx].unsqueeze(0)  # (1,1,28,28)
+    label = labels[random_idx]
 
     with torch.no_grad():
         outputs = model(image)
@@ -93,5 +93,6 @@ for idx in range(8):
     plt.imshow(image.squeeze(), cmap='gray')
     plt.title(f"True: {label.item()}, Pred: {predicted.item()}")
     plt.axis('off')
-    plt.savefig(f'{save_dir}/mnist_prediction_{idx}.png')  # resultフォルダに保存
+    plt.savefig(f'{save_dir}/mnist_prediction_random_{idx}.png')
     plt.close()
+
