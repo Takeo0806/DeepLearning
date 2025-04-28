@@ -7,10 +7,15 @@ import torchvision.transforms as transforms
 import matplotlib
 matplotlib.use('Agg')  # GUIなしバックエンド
 import matplotlib.pyplot as plt
+import random
 
 # ==== 保存ディレクトリを作成 ====
 save_dir = './result'
 os.makedirs(save_dir, exist_ok=True)
+
+# ==== 間違った画像保存用ディレクトリを作成 ====
+save_unabled_dir = './result_unabled'
+os.makedirs(save_unabled_dir, exist_ok=True)
 
 # ==== 1. データセットの準備 ====
 transform = transforms.ToTensor()
@@ -71,8 +76,6 @@ print(f'Test Accuracy: {100 * correct / total:.2f}%')
 
 # ==== 6. テスト画像から8枚を推論・保存 ====
 
-import random
-
 # テストデータから1バッチ取得
 testiter = iter(testloader)
 images, labels = next(testiter)
@@ -95,4 +98,21 @@ for idx, random_idx in enumerate(indices):
     plt.axis('off')
     plt.savefig(f'{save_dir}/mnist_prediction_random_{idx}.png')
     plt.close()
+
+# ==== 7. テストセット全体から失敗した画像を保存 ====
+
+model.eval()
+with torch.no_grad():
+    for batch_idx, (images, labels) in enumerate(testloader):
+        outputs = model(images)
+        _, predicted = torch.max(outputs, 1)
+
+        for i in range(images.size(0)):
+            if predicted[i].item() != labels[i].item():
+                plt.imshow(images[i].squeeze(), cmap='gray')
+                plt.title(f"True: {labels[i].item()}, Pred: {predicted[i].item()}")
+                plt.axis('off')
+                plt.savefig(f'{save_unabled_dir}/wrong_batch{batch_idx}_img{i}.png')
+                plt.close()
+
 
